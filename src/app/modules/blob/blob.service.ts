@@ -1,10 +1,13 @@
 import { Injectable } from '@angular/core'
 import { HttpClient, HttpHeaders } from '@angular/common/http'
 import { UploadParams, UploadConfig } from './definitions'
+
 @Injectable()
 export class BlobService {
+
   static DefaultBlockSize = 1024 * 32
   constructor (private http: HttpClient) { }
+
   generateBlobUrl (
     params: UploadParams,
     filename: string,
@@ -13,6 +16,7 @@ export class BlobService {
     const url = useAzureStorageEmulator ? azureStorageEmulatorBaseUrl : `https://${params.storageAccount}.blob.core.windows.net`
     return `${url}/${params.containerName}/${filename}`
   }
+
   private uploadFileInBlocks (reader, state) {
       if (!state.cancelled) {
           if (state.totalBytesRemaining > 0) {
@@ -88,6 +92,7 @@ export class BlobService {
           cancelled: false
       }
   }
+
   upload (config: UploadConfig) {
     const state = this.initializeState(config)
     const reader = new FileReader()
@@ -123,6 +128,7 @@ export class BlobService {
           }
       }
   }
+  
   private prependZeros (number, length) {
     let str = '' + number
     while (str.length < length) {
