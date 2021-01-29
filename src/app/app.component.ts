@@ -46,7 +46,6 @@ export class AppComponent {
   }
 
   upload (xfile, cb) {
-
     if (xfile !== null) {
       const baseUrl = this.blob.generateBlobUrl(Config, xfile.name);
 
@@ -62,15 +61,13 @@ export class AppComponent {
           console.log('Error:', err)
         },
         progress: (percent) => {
-          cb(percent)
-          //console.log("PERCENT", percent)
-          this.percent = percent
+          cb(percent);
+          this.percent = percent;
         }
       }
       
       this.blob.upload(this.config);
       
     }
-
   }
 }
