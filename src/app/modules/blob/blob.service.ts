@@ -5,7 +5,7 @@ import { UploadParams, UploadConfig } from './definitions'
 @Injectable()
 export class BlobService {
 
-  static DefaultBlockSize = 1024 * 32
+  static DefaultBlockSize = 1024 * 64 * 64
   constructor (private http: HttpClient) { }
 
   generateBlobUrl (
@@ -18,8 +18,9 @@ export class BlobService {
   }
 
   private uploadFileInBlocks (reader, state) {
+    
       if (!state.cancelled) {
-          if (state.totalBytesRemaining > 0) {
+          if (state.totalBytesRemaining > 0) {            
               const fileContent = state.file.slice(state.currentFilePointer, state.currentFilePointer + state.maxBlockSize)
               const blockId = state.blockIdPrefix + this.prependZeros(state.blockIds.length, 6)
               state.blockIds.push(btoa(blockId))
@@ -34,7 +35,8 @@ export class BlobService {
           }
       }
   }
-  private commitBlockList (state) {
+  
+  private commitBlockList(state) {
       const uri = state.fileUrl + '&comp=blocklist'
       const headers = new HttpHeaders({ 'x-ms-blob-content-type': state.file.type })
       let requestBody = '<?xml version=\'1.0\' encoding=\'utf-8\'?><BlockList>'
@@ -45,7 +47,7 @@ export class BlobService {
 
       this.http.put(uri, requestBody, { headers: headers, responseType: 'text' })
         .subscribe(_elem => {
-          if (state.complete) {
+          if (state.complete) {            
             state.complete()
           }
         }, err => {
@@ -55,7 +57,8 @@ export class BlobService {
           }
         })
   }
-  private initializeState (config: UploadConfig) {
+
+  private initializeState(config: UploadConfig) {
       let blockSize = BlobService.DefaultBlockSize
       if (config.blockSize) {
         blockSize = config.blockSize
@@ -64,6 +67,7 @@ export class BlobService {
       let numberOfBlocks = 1
       const file = config.file
       const fileSize = file.size
+      
       if (fileSize < blockSize) {
           maxBlockSize = fileSize
       }
@@ -93,15 +97,19 @@ export class BlobService {
       }
   }
 
-  upload (config: UploadConfig) {
+  upload(config: UploadConfig) {
     const state = this.initializeState(config)
     const reader = new FileReader()
+
     reader.onloadend = (evt: any) => {
+      
       if (evt.target.readyState === 2 && !state.cancelled) {
         const uri = state.fileUrl + '&comp=block&blockid=' + state.blockIds[state.blockIds.length - 1]
+        console.log("STATE",state)
         const requestData = evt.target.result
         const requestData2 = new Uint8Array(evt.target.result)
         const headers = new HttpHeaders({ 'x-ms-blob-type': 'BlockBlob', 'Content-Type': 'application/octet-stream' })
+
         this.http.put(uri, requestData, { headers: headers, responseType: 'text' })
           .subscribe(_elem => {
             state.bytesUploaded += requestData2.length
@@ -134,6 +142,7 @@ export class BlobService {
     while (str.length < length) {
       str = '0' + str
     }
+    
     return str
   }
 }

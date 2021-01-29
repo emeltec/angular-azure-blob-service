@@ -13,7 +13,7 @@ export interface UploadConfig {
   /** SAS Token */
   sasToken: string
   /** Base URL of the container */
-  baseUrl: string
+  baseUrl?: string
   /** The file that needs to be uploaded */
   file: File
   /** Blocksize (default 1024*32) */

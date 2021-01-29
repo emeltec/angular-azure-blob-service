@@ -8,28 +8,38 @@ import { Config } from './config.template'
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  /** The upload config */
+
   config: UploadConfig
-  /** The selected file */
-  currentFile: File
-  /** The current percent to be displayed */
+  currentFiles: File[] = [];
   percent: number
+  
   constructor (private blob: BlobService) {
-    this.currentFile = null
+    this.currentFiles = null
     this.config = null
     this.percent = 0
   }
+  
   updateFiles (files) {
-    this.currentFile = files[0]
+    this.currentFiles = Array.from(files)
+
+    this.currentFiles.forEach(file => {
+      this.upload(file)
+    })
   }
-  upload () {
-    if (this.currentFile !== null) {
-      const baseUrl = this.blob.generateBlobUrl(Config, this.currentFile.name)
+
+  upload (xfile) {
+
+    //this.currentFiles.forEach(xfile => {
+
+
+    if (xfile !== null) {
+      const baseUrl = this.blob.generateBlobUrl(Config, xfile.name);
+
       this.config = {
         baseUrl: baseUrl,
         blockSize: 1024 * 32,
         sasToken: Config.sas,
-        file: this.currentFile,
+        file: xfile,
         complete: () => {
           console.log('Transfer completed !')
         },
@@ -37,10 +47,17 @@ export class AppComponent {
           console.log('Error:', err)
         },
         progress: (percent) => {
+          console.log("PERCENT", percent)
           this.percent = percent
         }
       }
-      this.blob.upload(this.config)
+      
+      this.blob.upload(this.config);
+      
     }
+
+  //})
+
+
   }
 }

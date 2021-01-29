@@ -1,4 +1,9 @@
 <h1>Angular Azure Blob Storage</h1>
-<input type="file" #file (change)="updateFiles(file.files)">
+<input type="file" multiple #file (change)="updateFiles($event.target.files)">
 <input type="button" (click)="upload()" value="Send">
+
+<br>
+<div >
+
+</div>
 <p *ngIf="percent > 0">Progress: {{ percent }}%</p>
