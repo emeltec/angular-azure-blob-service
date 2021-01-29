@@ -1,6 +1,7 @@
 import { Component } from '@angular/core'
 import { BlobService, UploadConfig } from './modules/blob/blob.module'
 import { Config } from './config.template'
+import { BehaviorSubject, Observable } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -11,26 +12,40 @@ export class AppComponent {
 
   config: UploadConfig
   currentFiles: File[] = [];
-  percent: number
+  percent: number;
+
+  filesObs: BehaviorSubject<Array<any>>
   
   constructor (private blob: BlobService) {
     this.currentFiles = null
     this.config = null
-    this.percent = 0
+    this.percent = 0;
+
+    this.filesObs = new BehaviorSubject([]);
   }
   
   updateFiles (files) {
-    this.currentFiles = Array.from(files)
-
-    this.currentFiles.forEach(file => {
-      this.upload(file)
+    this.currentFiles = Array.from(files);
+    let filesUploading = this.currentFiles.map((file)=>{
+      return {
+        file: file,
+        progress: 0,
+        error: false
+      }
     })
+
+    this.filesObs.next(filesUploading);
+    
+    filesUploading.forEach(file => {
+      this.upload(file.file, (e)=> {
+        file.progress = e
+        console.log(file.progress + ': ' + e);
+      })
+    })
+
   }
 
-  upload (xfile) {
-
-    //this.currentFiles.forEach(xfile => {
-
+  upload (xfile, cb) {
 
     if (xfile !== null) {
       const baseUrl = this.blob.generateBlobUrl(Config, xfile.name);
@@ -47,7 +62,8 @@ export class AppComponent {
           console.log('Error:', err)
         },
         progress: (percent) => {
-          console.log("PERCENT", percent)
+          cb(percent)
+          //console.log("PERCENT", percent)
           this.percent = percent
         }
       }
@@ -55,9 +71,6 @@ export class AppComponent {
       this.blob.upload(this.config);
       
     }
-
-  //})
-
 
   }
 }

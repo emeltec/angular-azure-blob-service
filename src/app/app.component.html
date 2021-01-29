@@ -3,7 +3,8 @@
 <input type="button" (click)="upload()" value="Send">
 
 <br>
-<div >
-
+<div *ngFor="let file of filesObs | async">
+    <p>{{file.file.name}} {{file.progress}}</p>
 </div>
+
 <p *ngIf="percent > 0">Progress: {{ percent }}%</p>
