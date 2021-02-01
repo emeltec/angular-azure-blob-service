@@ -2,6 +2,7 @@ import { Component } from '@angular/core'
 import { BlobService, UploadConfig } from './modules/blob/blob.module'
 import { Config } from './config.template'
 import { BehaviorSubject, Observable } from 'rxjs';
+import { take } from 'rxjs/operators'
 
 @Component({
   selector: 'app-root',
@@ -11,43 +12,97 @@ import { BehaviorSubject, Observable } from 'rxjs';
 export class AppComponent {
 
   config: UploadConfig
-  currentFiles: File[] = [];
+  filesSelected: File[];
   percent: number;
 
   filesObs: BehaviorSubject<Array<any>>
   
-  constructor (private blob: BlobService) {
-    this.currentFiles = null
-    this.config = null
+  constructor (private blobService: BlobService) {
+    this.filesSelected = [];
+    this.config = null;
     this.percent = 0;
-
     this.filesObs = new BehaviorSubject([]);
   }
   
-  updateFiles (files) {
-    this.currentFiles = Array.from(files);
-    let filesUploading = this.currentFiles.map((file)=>{
-      return {
-        file: file,
-        progress: 0,
-        error: false
+  changeFiles(files) {
+    this.filesSelected = Array.from(files);
+
+    let filesUploading = this.filesSelected.map((file) => {
+      if(file.type !== 'text/plain') {
+        return {
+          file: file,
+          progress: 0,
+          error: true
+        }
+      } else {
+        return {
+          file: file,
+          progress: 0,
+          error: false
+        }
       }
     })
+
+    console.log("F ",filesUploading)
 
     this.filesObs.next(filesUploading);
     
     filesUploading.forEach(file => {
-      this.upload(file.file, (e)=> {
-        file.progress = e
-        console.log(file.progress + ': ' + e);
-      })
+      if(file.file.type == 'text/plain'){
+        this.uploadService(file.file, (prog) => {
+          file.progress = prog
+          file.file.type
+          console.log(file);
+        })
+      }
     })
 
   }
 
-  upload (xfile, cb) {
-    if (xfile !== null) {
-      const baseUrl = this.blob.generateBlobUrl(Config, xfile.name);
+  changeNewFile(file, index){
+    let newFileArray: File[];
+    newFileArray = Array.from(file);
+    console.log("INDEX",index);
+
+    let fileUploading = newFileArray.map((file)=>{
+      if(file.type !== 'text/plain') {
+        return {
+          file: file,
+          progress: 0,
+          error: true
+        }
+      } else {
+        return {
+          file: file,
+          progress: 0,
+          error: false
+        }
+      }
+    })
+
+    //this.filesObs.next(fileUploading);
+
+    this.filesObs.pipe(take(1)).subscribe(val => {
+      let valueObs = this.filesObs.getValue();
+      valueObs.splice(index, 1)
+      let newArr = [...valueObs, fileUploading]
+
+      this.filesObs.next(newArr)
+    })
+
+    fileUploading.forEach(file => {
+      if(file.file.type == 'text/plain'){
+        this.uploadService(file.file, (prog) => {
+          file.progress = prog
+          file.file.type
+          console.log(file);
+        })
+      }
+    })
+  }
+
+  uploadService(xfile, cbk) {
+      const baseUrl = this.blobService.generateBlobUrl(Config, xfile.name);
 
       this.config = {
         baseUrl: baseUrl,
@@ -61,13 +116,12 @@ export class AppComponent {
           console.log('Error:', err)
         },
         progress: (percent) => {
-          cb(percent);
+          //console.log(xfile)
+          cbk(percent);
           this.percent = percent;
         }
       }
       
-      this.blob.upload(this.config);
-      
-    }
+      this.blobService.uploadService(this.config);
   }
 }

@@ -97,7 +97,7 @@ export class BlobService {
       }
   }
 
-  upload(config: UploadConfig) {
+  uploadService(config: UploadConfig) {
     const state = this.initializeState(config)
     const reader = new FileReader()
 
@@ -105,7 +105,6 @@ export class BlobService {
       
       if (evt.target.readyState === 2 && !state.cancelled) {
         const uri = state.fileUrl + '&comp=block&blockid=' + state.blockIds[state.blockIds.length - 1]
-        //console.log("STATE",state)
         const requestData = evt.target.result
         const requestData2 = new Uint8Array(evt.target.result)
         const headers = new HttpHeaders({ 'x-ms-blob-type': 'BlockBlob', 'Content-Type': 'application/octet-stream' })

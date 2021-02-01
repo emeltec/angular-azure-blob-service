@@ -1,10 +1,27 @@
 <h1>Angular Azure Blob Storage</h1>
-<input type="file" multiple #file (change)="updateFiles($event.target.files)">
-<input type="button" (click)="upload()" value="Send">
+<input type="file" multiple #file (change)="changeFiles($event.target.files)">
 
-<br>
-<div *ngFor="let file of filesObs | async">
-    <p>{{file.file.name}} {{file.progress}}</p>
+<br><br>
+<div *ngFor="let file of filesObs | async; let idx = index">
+    <div class="file-detail" *ngIf="!file.error">
+        <div>{{file.file.name}} - {{file.progress}}</div>
+        <div>Error: {{file.error}}</div>
+    </div>
+    <div class="file-detail error" *ngIf="file.error">
+        <div>
+            <div>{{file.file.name}} - {{file.progress}}</div>
+            <div>Error: {{file.error}}</div>
+        </div>
+        <div>
+            <input type="file" (change)="changeNewFile($event.target.files[0], idx)">
+        </div>
+    </div>
+    
 </div>
 
 <p *ngIf="percent > 0">Progress: {{ percent }}%</p>
+
+
+<!--  <pre>
+     {{ filesObs |async | json }}
+ </pre> -->
