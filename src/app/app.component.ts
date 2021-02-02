@@ -1,7 +1,7 @@
 import { Component } from '@angular/core'
 import { BlobService, UploadConfig } from './modules/blob/blob.module'
 import { Config } from './config.template'
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 import { take } from 'rxjs/operators'
 
 @Component({
@@ -11,7 +11,7 @@ import { take } from 'rxjs/operators'
 })
 export class AppComponent {
 
-  config: UploadConfig
+  config: UploadConfig;
   filesSelected: File[];
   percent: number;
 
@@ -28,7 +28,7 @@ export class AppComponent {
     this.filesSelected = Array.from(files);
 
     let filesUploading = this.filesSelected.map((file) => {
-      if(file.type !== 'text/plain') {
+      if(this.validateFileExtension(file) === 'INVALID') {
         return {
           file: file,
           progress: 0,
@@ -43,15 +43,13 @@ export class AppComponent {
       }
     })
 
-    console.log("F ",filesUploading)
-
     this.filesObs.next(filesUploading);
     
     filesUploading.forEach(file => {
-      if(file.file.type == 'text/plain'){
+      if(this.validateFileExtension(file.file) === 'VALID'){
         this.uploadService(file.file, (prog) => {
-          file.progress = prog
-          file.file.type
+          file.progress = prog;
+          file.file.type;
           console.log(file);
         })
       }
@@ -59,13 +57,12 @@ export class AppComponent {
 
   }
 
-  changeNewFile(file, index){
+  changeNewFile(file, index) {
     let newFileArray: File[];
     newFileArray = Array.from(file);
-    console.log("INDEX",index);
 
-    let fileUploading = newFileArray.map((file)=>{
-      if(file.type !== 'text/plain') {
+    let fileUploading = newFileArray.map((file) => {
+      if(this.validateFileExtension(file) === 'INVALID') {
         return {
           file: file,
           progress: 0,
@@ -79,25 +76,33 @@ export class AppComponent {
         }
       }
     })
-
-    //this.filesObs.next(fileUploading);
-
+    
     this.filesObs.pipe(take(1)).subscribe(val => {
-      let valueObs = this.filesObs.getValue();
-      valueObs.splice(index, 1)
-      let newArr = [...valueObs, fileUploading]
-
-      this.filesObs.next(newArr)
+      if(val.length == 0){
+        this.filesObs.next(fileUploading);
+      } else {
+        let valueObs = this.filesObs.getValue();
+        valueObs.splice(index, 1, ...fileUploading)
+        this.filesObs.next(valueObs);
+      }
     })
 
     fileUploading.forEach(file => {
-      if(file.file.type == 'text/plain'){
+      if(this.validateFileExtension(file.file) === 'VALID') {
         this.uploadService(file.file, (prog) => {
-          file.progress = prog
-          file.file.type
+          file.progress = prog;
+          file.file.type;
           console.log(file);
         })
       }
+    })
+  }
+
+  deleteFile(idx){
+    this.filesObs.pipe(take(1)).subscribe( val => {
+      let valueObs = this.filesObs.getValue();
+        valueObs.splice(idx, 1);
+        this.filesObs.next(valueObs);
     })
   }
 
@@ -110,10 +115,10 @@ export class AppComponent {
         sasToken: Config.sas,
         file: xfile,
         complete: () => {
-          console.log('Transfer completed !')
+          console.log('Transfer completed !');
         },
         error: (err) => {
-          console.log('Error:', err)
+          console.log('Error:', err);
         },
         progress: (percent) => {
           //console.log(xfile)
@@ -123,5 +128,16 @@ export class AppComponent {
       }
       
       this.blobService.uploadService(this.config);
+  }
+
+  private validateFileExtension(file): string {
+    const validExtensions = ['txt', 'csv'];
+    const extension = file.name.split('.');
+    const extFinal = extension[extension.length - 1].toLowerCase();
+
+    if (validExtensions.indexOf(extFinal) < 0) {
+      return 'INVALID';
+    }
+    return 'VALID';
   }
 }

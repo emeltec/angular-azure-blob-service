@@ -3,19 +3,23 @@
 
 <br><br>
 <div *ngFor="let file of filesObs | async; let idx = index">
-    <div class="file-detail" *ngIf="!file.error">
-        <div>{{file.file.name}} - {{file.progress}}</div>
-        <div>Error: {{file.error}}</div>
-    </div>
-    <div class="file-detail error" *ngIf="file.error">
-        <div>
+    <div class="file-detail">
+        <div class="detail-correct" *ngIf="!file.error">
             <div>{{file.file.name}} - {{file.progress}}</div>
-            <div>Error: {{file.error}}</div>
+            <div>Error: {{file.error}} - IDX: {{idx}}</div>
         </div>
-        <div>
-            <input type="file" (change)="changeNewFile($event.target.files[0], idx)">
+        <div class="detail-error" *ngIf="file.error">
+            <div>
+                <div>{{file.file.name}} - {{file.progress}}</div>
+                <div>Error: {{file.error}} - IDX: {{idx}}</div>
+            </div>
+            <div class="options">
+                <input type="file" (change)="changeNewFile($event.target.files, idx)">
+                <button (click)="deleteFile(idx)">Delete</button> 
+            </div>
         </div>
     </div>
+    
     
 </div>
 
